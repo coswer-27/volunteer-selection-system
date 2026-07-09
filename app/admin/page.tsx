@@ -277,28 +277,28 @@ export default function AdminPage() {
   return (
     <div className="max-w-5xl mx-auto p-8 mt-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">管理員後台</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Console</h1>
         <div className="flex flex-wrap gap-3">
           {/* 隱藏的檔案上傳元件 */}
           <input type="file" accept=".csv" ref={fileInputRef} onChange={handleImportCSV} className="hidden" />
           
           <button onClick={handleExportCSV} disabled={isSubmitting} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            匯出 CSV 模板
+            Export
           </button>
           <button onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            匯入 CSV
+            Import
           </button>
           <button onClick={handleRunRandomDraw} disabled={isSubmitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            執行隨機抽籤
+            Random
           </button>
           <button onClick={handleClearRegistrations} disabled={isSubmitting} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            🧹 清空選填紀錄
+            Clear
           </button>
           <button onClick={handleClearClubs} disabled={isSubmitting} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            🗑️ 刪除所有社團
+            Delete
           </button>
           <button onClick={() => signOut(auth)} className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50">
-            登出
+            LogOut
           </button>
         </div>
       </div>
