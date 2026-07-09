@@ -84,7 +84,13 @@ export default function ClubDetailPage() {
 
   const appliedCount = club.applied || 0;
   const isMyClub = myRegisteredClubId === club.id;
-  const resolveImage = (url: string | undefined | null) => (url && url.trim() !== '') ? url.trim() : '/clubs/default.jpg';
+  // 確保將檔名轉換為 public 靜態目錄的絕對路徑
+  const resolveLocalImage = (filename: string | undefined | null) => {
+    if (filename && filename.trim() !== '') {
+      return `/clubs/${filename.trim()}`;
+    }
+    return '/clubs/default.jpg';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
@@ -97,7 +103,17 @@ export default function ClubDetailPage() {
       <main className="max-w-4xl mx-auto px-4 mt-8">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="h-64 md:h-96 w-full relative bg-gray-200">
-            <img src={resolveImage(club.imageUrl)} alt={club.name} className="w-full h-full object-cover" onError={e => (e.target as HTMLImageElement).src = '/clubs/default.jpg'} />
+            <img 
+              src={resolveLocalImage(club.imageFile)} 
+              alt={club.name} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (!target.src.endsWith('/default.jpg')) {
+                  target.src = '/clubs/default.jpg';
+                }
+              }}
+            />
             {isMyClub && <div className="absolute top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-full">✔️ 你已登記此社團</div>}
           </div>
           <div className="p-8">
