@@ -333,7 +333,7 @@ export default function AdminPage() {
           {/* 第二排：圖片與連結 */}
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-600 mb-1">圖片檔名 (例如: guitar.jpg)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">圖片檔名</label>
               <input type="text" value={newImageFile} onChange={(e) => setNewImageFile(e.target.value)} placeholder="留白則使用預設圖" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
             <div className="flex-1 w-full">
@@ -341,9 +341,9 @@ export default function AdminPage() {
               <input type="url" value={newClubLink} onChange={(e) => setNewClubLink(e.target.value)} placeholder="https://instagram.com/..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
             {/* 新增這排 Hashtags 輸入框 */}
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-600 mb-1">Hashtags 標籤 (請用逗號分隔，例如：音樂,表演,熱血)</label>
-              <input type="text" value={newHashtags} onChange={(e) => setNewHashtags(e.target.value)} placeholder="音樂,表演,迎新" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
+            <div className="flex-1 w-full">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Hashtags (請用逗號分隔)</label>
+              <input type="text" value={newHashtags} onChange={(e) => setNewHashtags(e.target.value)} placeholder="#" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
           </div>
           
