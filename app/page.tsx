@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebaseConfig';
 import { registerClubTransaction, cancelRegistrationTransaction } from '../lib/clubService';
 
@@ -17,6 +17,7 @@ export default function Home() {
   const [clubs, setClubs] = useState<any[]>([]);
   const [sysMessage, setSysMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // 學生登入狀態管理
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
@@ -29,11 +30,19 @@ export default function Home() {
   // 1. 初始化與讀取資料
   const fetchClubs = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'clubs'));
-      const clubData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setClubs(clubData);
+      // 改為向我們剛剛做的快取 API 發出請求
+      const response = await fetch('/api/clubs');
+      const data = await response.json();
+      
+      if (data.success) {
+        setClubs(data.clubs);
+      } else {
+        console.error("讀取失敗:", data.error);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("API 連線失敗:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,6 +69,17 @@ export default function Home() {
       checkStudentStatus(profile.studentId);
     }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        {/* 旋轉的載入動畫 */}
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+        <h2 className="text-xl font-bold text-gray-700">載入社團資料中...</h2>
+        <p className="text-gray-500 mt-2">請稍候，正在為您準備最新資訊</p>
+      </div>
+    );
+  }
 
   // 2. 登入與登出邏輯
   const handleStudentLogin = async (e: React.FormEvent) => {

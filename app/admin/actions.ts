@@ -5,12 +5,13 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { initializeFirestore, collection, getDocs, doc, writeBatch, addDoc, updateDoc, deleteDoc, connectFirestoreEmulator } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  // 🔥 加上 || "demo-key"，如果找不到真實金鑰，就塞假字串給它騙過驗證
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "demo-api-key",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "demo-project.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "demo-project",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "demo-bucket",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789:web:abcdef"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -19,7 +20,10 @@ const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true })
 if (process.env.NODE_ENV === 'development') {
   try {
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  } catch (e) {}
+    console.log("🎯 [開發環境] 系統已鏈結至本地模擬器！");
+  } catch (error) {
+    console.log("模擬器已連線，略過重複設定。");
+  }
 }
 
 // 替換 1：更新 saveClubAction
