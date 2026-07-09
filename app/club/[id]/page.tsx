@@ -135,7 +135,7 @@ export default function ClubDetailPage() {
         {studentProfile ? (
           <div className="text-sm font-medium text-gray-700">{studentProfile.className} {studentProfile.name}</div>
         ) : (
-          <button onClick={() => setShowLoginModal(true)} className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-bold rounded-full">學生登入</button>
+          <button onClick={() => setShowLoginModal(true)} className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-bold rounded-full">新生登入</button>
         )}
       </nav>
 
@@ -152,7 +152,7 @@ export default function ClubDetailPage() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="h-64 md:h-96 w-full relative bg-gray-200">
             <img src={imageUrl} alt={club.name} className="w-full h-full object-cover" />
-            {isMyClub && <div className="absolute top-4 right-4 bg-indigo-600 text-white font-bold px-4 py-2 rounded-full shadow-lg text-lg animate-pulse">✔️ 你已登記此社團</div>}
+            {isMyClub && <div className="absolute top-4 right-4 bg-indigo-600 text-white font-bold px-4 py-2 rounded-full shadow-lg text-lg animate-pulse">你已登記此社團</div>}
           </div>
           
           <div className="p-8">
@@ -166,7 +166,7 @@ export default function ClubDetailPage() {
             </div>
 
             <p className="text-lg text-gray-600 mb-8 whitespace-pre-wrap leading-relaxed">
-              {club.description || "歡迎加入我們！快來跟我們一起創造難忘的大學回憶吧！"}
+              {club.description}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -179,7 +179,7 @@ export default function ClubDetailPage() {
                 <p className="text-2xl font-bold text-gray-800">{appliedCount} 人</p>
               </div>
               <div className={`p-4 rounded-xl border ${appliedCount > club.capacity ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-                <p className={`text-sm mb-1 ${appliedCount > club.capacity ? 'text-red-500' : 'text-green-600'}`}>目前中籤機率</p>
+                <p className={`text-sm mb-1 ${appliedCount > club.capacity ? 'text-red-500' : 'text-green-600'}`}>目前中選機率</p>
                 <p className={`text-2xl font-bold ${appliedCount > club.capacity ? 'text-red-600' : 'text-green-700'}`}>
                   {appliedCount > club.capacity ? `${((club.capacity / appliedCount) * 100).toFixed(1)}%` : '100%'}
                 </p>
@@ -189,7 +189,7 @@ export default function ClubDetailPage() {
             <div className="border-t pt-8">
               {isMyClub ? (
                 <button onClick={handleCancelRegister} disabled={isSubmitting} className="w-full py-4 rounded-xl text-lg text-indigo-700 font-bold bg-indigo-50 border-2 border-indigo-200 hover:bg-indigo-100 transition-colors">
-                  取消登記 (退選)
+                  取消登記
                 </button>
               ) : (
                 <button onClick={handleRegister} disabled={isSubmitting || myRegisteredClubId !== null} className={`w-full py-4 rounded-xl text-lg font-bold transition-all shadow-sm ${myRegisteredClubId !== null ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-800 hover:bg-black text-white hover:shadow-lg transform hover:-translate-y-1'}`}>
@@ -206,10 +206,10 @@ export default function ClubDetailPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="bg-indigo-600 p-6 text-center">
-              <h3 className="text-2xl font-bold text-white">學生登入</h3>
+              <h3 className="text-2xl font-bold text-white">新生登入</h3>
             </div>
             <form onSubmit={handleStudentLogin} className="p-6 space-y-4">
-              <input required type="text" value={loginForm.className} onChange={e => setLoginForm({...loginForm, className: e.target.value})} placeholder="班級 (如: 資工三甲)" className="w-full border px-4 py-2.5 rounded-xl" />
+              <input required type="text" value={loginForm.className} onChange={e => setLoginForm({...loginForm, className: e.target.value})} placeholder="班級 " className="w-full border px-4 py-2.5 rounded-xl" />
               <input required type="text" value={loginForm.name} onChange={e => setLoginForm({...loginForm, name: e.target.value})} placeholder="姓名" className="w-full border px-4 py-2.5 rounded-xl" />
               <input required type="text" value={loginForm.studentId} onChange={e => setLoginForm({...loginForm, studentId: e.target.value})} placeholder="學號" className="w-full border px-4 py-2.5 rounded-xl uppercase" />
               <div className="flex gap-3 pt-2">

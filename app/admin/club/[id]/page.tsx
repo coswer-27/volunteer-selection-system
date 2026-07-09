@@ -74,7 +74,7 @@ export default function AdminClubEditPage() {
     <div className="max-w-3xl mx-auto p-8 mt-10">
       <div className="flex items-center gap-4 mb-8 border-b pb-4">
         <button onClick={() => router.push('/admin')} className="text-gray-500 hover:text-indigo-600 font-bold text-xl">←</button>
-        <h1 className="text-3xl font-bold text-gray-800">編輯社團：{name}</h1>
+        <h1 className="text-3xl font-bold text-gray-800">編輯社團 - {name}</h1>
       </div>
 
       {message && (
@@ -97,24 +97,24 @@ export default function AdminClubEditPage() {
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">封面圖片網址 (URL)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">社團圖片網址 (URL)</label>
             <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">外部社團連結 (URL)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">粉專連結 (URL)</label>
             <input type="url" value={clubLink} onChange={e => setClubLink(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">社團詳細介紹</label>
-          <textarea rows={6} value={description} onChange={e => setDescription(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-y" placeholder="請輸入多行社團介紹..."></textarea>
+          <label className="block text-sm font-medium text-gray-700 mb-1">社團簡介</label>
+          <textarea rows={6} value={description} onChange={e => setDescription(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-y" placeholder="輸入一段吸引人的社團簡介..."></textarea>
         </div>
 
         <div className="pt-4 border-t flex justify-end gap-4">
           <button type="button" onClick={() => router.push('/admin')} className="px-6 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300">取消</button>
           <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-md">
-            {isSubmitting ? '儲存中...' : '確認修改'}
+            {isSubmitting ? '儲存中...' : '修改'}
           </button>
         </div>
       </form>

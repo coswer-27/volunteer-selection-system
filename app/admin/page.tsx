@@ -268,22 +268,22 @@ export default function AdminPage() {
   return (
     <div className="max-w-5xl mx-auto p-8 mt-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">社團管理後台</h1>
+        <h1 className="text-3xl font-bold text-gray-800">管理員後台</h1>
         <div className="flex flex-wrap gap-3">
           {/* 隱藏的檔案上傳元件 */}
           <input type="file" accept=".csv" ref={fileInputRef} onChange={handleImportCSV} className="hidden" />
           
           <button onClick={handleExportCSV} disabled={isSubmitting} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            📥 匯出 CSV 模板
+            匯出 CSV 模板
           </button>
           <button onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            📤 匯入 CSV
+            匯入 CSV
           </button>
           <button onClick={handleRunRandomDraw} disabled={isSubmitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            🎲 執行隨機抽籤
+            執行隨機抽籤
           </button>
           <button onClick={handleClearDatabase} disabled={isSubmitting} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            🗑️ 清除所有資料
+            清除所有選填志願
           </button>
           <button onClick={() => signOut(auth)} className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50">
             登出
@@ -300,7 +300,7 @@ export default function AdminPage() {
       {/* 🔥 核心補回：新增與修改社團的動態輸入表單 */}
       <div className="bg-gray-50 p-6 rounded-lg border mb-8 shadow-sm">
         <h3 className="text-lg font-bold mb-4 text-gray-800">
-          {editingId ? '📝 編輯社團內容' : '➕ 新增社團項目'}
+          {editingId ? '📝 編輯社團內容' : '新增社團項目'}
         </h3>
         <form onSubmit={handleSaveClub} className="flex flex-col gap-4">
           {/* 第一排：名稱與名額 */}
@@ -318,18 +318,18 @@ export default function AdminPage() {
           {/* 第二排：圖片與連結 */}
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-600 mb-1">封面圖片網址 (可選)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">社團圖片網址</label>
               <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="https://..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
             <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-600 mb-1">社團連結 (例如 IG/粉專，可選)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">粉專連結 </label>
               <input type="url" value={newClubLink} onChange={(e) => setNewClubLink(e.target.value)} placeholder="https://instagram.com/..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
           </div>
           
           {/* 第三排：介紹 */}
           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-600 mb-1">社團介紹 (可選)</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">社團簡介</label>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={2} placeholder="輸入一段吸引人的社團簡介..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500 resize-none" />
           </div>
 
@@ -340,7 +340,7 @@ export default function AdminPage() {
               </button>
             )}
             <button type="submit" disabled={isSubmitting} className="px-8 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded shadow transition-colors">
-              {editingId ? '更新儲存' : '確認新增'}
+              {editingId ? '更新儲存' : '新增'}
             </button>
           </div>
         </form>
@@ -354,8 +354,8 @@ export default function AdminPage() {
               <th className="p-4 font-medium">社團名稱</th>
               <th className="p-4 font-medium">總名額</th>
               <th className="p-4 font-medium">已登記人數 (中籤率)</th>
-              <th className="p-4 font-medium">正式錄取</th>
-              <th className="p-4 font-medium text-right">操作管理</th>
+              <th className="p-4 font-medium">錄取</th>
+              <th className="p-4 font-medium">操作管理</th>
             </tr>
           </thead>
           <tbody>
@@ -375,13 +375,12 @@ export default function AdminPage() {
                     <button onClick={() => handleViewList(club)} className="px-3 py-1.5 text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors">
                       名單
                     </button>
-                    {/* 🔥 補回：編輯與刪除按鈕 */}
-                      <button 
-                          onClick={() => window.location.href = `/admin/club/${club.id}`} 
-                          className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-                        >
-                        編輯頁面
-                      </button>
+                    <button 
+                        onClick={() => window.location.href = `/admin/club/${club.id}`} 
+                        className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                      >
+                      編輯
+                    </button>
                     <button onClick={() => handleDeleteClub(club.id, club.name)} className="px-3 py-1.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors">
                       刪除
                     </button>

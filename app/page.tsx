@@ -141,7 +141,7 @@ export default function Home() {
       {/* 頂部導覽列 */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-black text-indigo-700 tracking-tight">Rêverie 志願選填系統</h1>
+          <h1 className="text-2xl font-black text-indigo-700 tracking-tight">新生營 社團志願系統</h1>
           <div>
             {studentProfile ? (
               <div className="flex items-center gap-4">
@@ -155,7 +155,7 @@ export default function Home() {
               </div>
             ) : (
               <button onClick={() => setShowLoginModal(true)} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-full shadow-md transition-all transform hover:scale-105">
-                學生登入
+                新生登入
               </button>
             )}
           </div>
@@ -178,7 +178,6 @@ export default function Home() {
         {clubs.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center gap-2 mb-6">
-              <span className="text-3xl">🔥</span>
               <h2 className="text-2xl font-bold text-gray-800">熱門社團排行</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -191,7 +190,7 @@ export default function Home() {
                           #{index + 1}
                         </span>
                         <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
-                          {club.applied || 0} 人搶填
+                          {club.applied || 0} 人登記
                         </span>
                       </div>
                       <h3 className="text-xl font-bold text-gray-800">{club.name}</h3>
@@ -206,7 +205,6 @@ export default function Home() {
         {/* 📚 所有社團網格區塊 */}
         <section>
           <div className="flex items-center gap-2 mb-6">
-            <span className="text-3xl">📚</span>
             <h2 className="text-2xl font-bold text-gray-800">所有社團</h2>
           </div>
           
@@ -224,7 +222,7 @@ export default function Home() {
                 
                 // 若資料庫沒有圖片與介紹，給予高質感的預設值
                 const imageUrl = club.imageUrl || `https://picsum.photos/seed/${club.id}/400/250`;
-                const description = club.description || "歡迎加入我們！這裡充滿了熱情與活力，快來跟我們一起創造難忘的大學回憶吧！";
+                const description = club.description;
 
                 return (
                   <div key={club.id} className={`flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 ${isMyClub ? 'ring-4 ring-indigo-500 shadow-xl scale-[1.02]' : 'shadow-sm hover:shadow-xl border border-gray-100'}`}>
@@ -234,7 +232,7 @@ export default function Home() {
                       <img src={imageUrl} alt={club.name} className="w-full h-full object-cover" />
                       {isMyClub && (
                         <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md animate-pulse">
-                          ✔️ 已登記志願
+                          ✅ 已登記志願
                         </div>
                       )}
                     </div>
@@ -262,10 +260,10 @@ export default function Home() {
                       <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{description}</p>
                       
                       <div className="bg-gray-50 rounded-lg p-3 mb-5 text-sm text-gray-700 space-y-1.5 border">
-                        <div className="flex justify-between"><span>總名額：</span><span className="font-medium">{club.capacity} 員</span></div>
+                        <div className="flex justify-between"><span>總名額：</span><span className="font-medium">{club.capacity} 人</span></div>
                         <div className="flex justify-between"><span>已登記：</span><span className="font-medium">{appliedCount} 人</span></div>
                         <div className="flex justify-between">
-                          <span>中籤機率：</span>
+                          <span>中選機率：</span>
                           <span className={`font-bold ${appliedCount > club.capacity ? "text-red-500" : "text-green-600"}`}>{rateText}</span>
                         </div>
                       </div>
@@ -275,7 +273,7 @@ export default function Home() {
                           onClick={() => window.location.href = `/club/${club.id}`} 
                           className="w-full mt-4 py-2.5 rounded-xl font-bold bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 transition-all shadow-sm"
                         >
-                          查看社團詳情 & 報名
+                          點我看詳細
                         </button>
                     </div>
                   </div>
@@ -291,21 +289,21 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div className="bg-indigo-600 p-6 text-center">
-              <h3 className="text-2xl font-bold text-white">學生登入</h3>
+              <h3 className="text-2xl font-bold text-white">新生登入</h3>
               <p className="text-indigo-200 text-sm mt-1">請輸入正確資料以進行志願選填</p>
             </div>
             <form onSubmit={handleStudentLogin} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">班級 (Class)</label>
-                <input required type="text" value={loginForm.className} onChange={e => setLoginForm({...loginForm, className: e.target.value})} placeholder="例如：資工三甲" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                <input required type="text" value={loginForm.className} onChange={e => setLoginForm({...loginForm, className: e.target.value})} placeholder="請輸入您的班級" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">姓名 (Name)</label>
-                <input required type="text" value={loginForm.name} onChange={e => setLoginForm({...loginForm, name: e.target.value})} placeholder="請輸入真實姓名" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                <input required type="text" value={loginForm.name} onChange={e => setLoginForm({...loginForm, name: e.target.value})} placeholder="請輸入您註冊的中文姓名" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">學號 (Student ID)</label>
-                <input required type="text" value={loginForm.studentId} onChange={e => setLoginForm({...loginForm, studentId: e.target.value})} placeholder="例如：B114001" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl uppercase focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                <input required type="text" value={loginForm.studentId} onChange={e => setLoginForm({...loginForm, studentId: e.target.value})} placeholder="請輸入您的九碼學號" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl uppercase focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
               </div>
               
               <div className="pt-4 flex gap-3">
@@ -313,7 +311,7 @@ export default function Home() {
                   取消
                 </button>
                 <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-colors">
-                  {isSubmitting ? '處理中...' : '確認登入'}
+                  {isSubmitting ? '處理中...' : '登入'}
                 </button>
               </div>
             </form>
