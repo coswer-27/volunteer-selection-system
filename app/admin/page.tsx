@@ -6,7 +6,9 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '../../lib/firebaseConfig';
 // 引入包含社團 CRUD 的 Server Actions
-import { runRandomDrawOnServer, clearAllTestData, saveClubAction, deleteClubAction } from './actions';
+import { runRandomDrawOnServer, clearAllTestData, saveClubAction, deleteClubAction, importClubsBulkAction } from './actions';
+import Papa from 'papaparse';
+import { useRef } from 'react';
 
 export default function AdminPage() {
   // 身分驗證狀態
@@ -16,6 +18,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null); // 👈 加入這行控制隱藏的檔案上傳
 
   // 社團列表與控制狀態
   const [clubs, setClubs] = useState<any[]>([]);
@@ -187,6 +190,57 @@ export default function AdminPage() {
     }
   };
 
+  // 🔥 匯出 CSV 模板 (帶入現有資料)
+  const handleExportCSV = () => {
+    // 整理成我們要的中文欄位格式
+    const exportData = clubs.length > 0 ? clubs.map(club => ({
+      '名稱': club.name || '',
+      '名額': club.capacity || '',
+      '封面圖片網址': club.imageUrl || '',
+      '社團連結': club.clubLink || '',
+      '社團介紹': club.description || ''
+    })) : [{ '名稱': '', '名額': '', '封面圖片網址': '', '社團連結': '', '社團介紹': '' }]; // 沒資料就給空模板
+
+    const csv = Papa.unparse(exportData);
+    // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 打開 CSV 時不會中文亂碼
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', '社團資料模板.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 🔥 讀取並解析上傳的 CSV 檔案
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsSubmitting(true);
+    setMessage("正在解析 CSV 檔案...");
+
+    Papa.parse(file, {
+      header: true,        // 把第一行當作 Key
+      skipEmptyLines: true, // 略過空白行
+      complete: async (results) => {
+        setMessage("正在將資料批次寫入資料庫...");
+        const res = await importClubsBulkAction(results.data);
+        setMessage(res.message);
+        if (res.success) {
+          await fetchClubs(); // 重新整理畫面
+        }
+        setIsSubmitting(false);
+        if (fileInputRef.current) fileInputRef.current.value = ''; // 清空 input 讓下次還能傳同一個檔
+      },
+      error: (error) => {
+        setMessage(`❌ 解析 CSV 失敗: ${error.message}`);
+        setIsSubmitting(false);
+      }
+    });
+  };
+
   if (isAuthLoading) return <div className="p-8 text-center">正在驗證身分...</div>;
 
   if (!user) {
@@ -216,10 +270,19 @@ export default function AdminPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b gap-4">
         <h1 className="text-3xl font-bold text-gray-800">社團管理後台</h1>
         <div className="flex flex-wrap gap-3">
-          <button onClick={handleRunRandomDraw} disabled={isSubmitting} className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+          {/* 隱藏的檔案上傳元件 */}
+          <input type="file" accept=".csv" ref={fileInputRef} onChange={handleImportCSV} className="hidden" />
+          
+          <button onClick={handleExportCSV} disabled={isSubmitting} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+            📥 匯出 CSV 模板
+          </button>
+          <button onClick={() => fileInputRef.current?.click()} disabled={isSubmitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+            📤 匯入 CSV
+          </button>
+          <button onClick={handleRunRandomDraw} disabled={isSubmitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
             🎲 執行隨機抽籤
           </button>
-          <button onClick={handleClearDatabase} disabled={isSubmitting} className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+          <button onClick={handleClearDatabase} disabled={isSubmitting} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
             🗑️ 清除所有資料
           </button>
           <button onClick={() => signOut(auth)} className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50">

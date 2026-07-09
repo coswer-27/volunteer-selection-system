@@ -152,3 +152,38 @@ export async function clearAllTestData() {
     return { success: false, message: `清除失敗: ${error.message}` };
   }
 }
+
+/**
+ * 🔥 後端：批次匯入社團資料 (CSV 解析後寫入)
+ */
+export async function importClubsBulkAction(parsedData: any[]) {
+  try {
+    const CHUNK_SIZE = 400; // 避開 Firestore 500 筆上限
+    const clubsRef = collection(db, 'clubs');
+    
+    for (let i = 0; i < parsedData.length; i += CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = parsedData.slice(i, i + CHUNK_SIZE);
+      
+      chunk.forEach(club => {
+        // 如果沒有名稱就略過該行 (避免空白行)
+        if (!club['名稱']) return; 
+        
+        const newDocRef = doc(clubsRef); // 自動生成新的 ID
+        batch.set(newDocRef, {
+          name: String(club['名稱']).trim(),
+          capacity: Number(club['名額']) || 0,
+          imageUrl: club['封面圖片網址'] ? String(club['封面圖片網址']).trim() : '',
+          clubLink: club['社團連結'] ? String(club['社團連結']).trim() : '',
+          description: club['社團介紹'] ? String(club['社團介紹']).trim() : '',
+          applied: 0,  // 新社團初始值
+          enrolled: 0  // 新社團初始值
+        });
+      });
+      await batch.commit();
+    }
+    return { success: true, message: `✅ 成功匯入 ${parsedData.length} 筆社團資料！` };
+  } catch (error: any) {
+    return { success: false, message: `❌ 匯入失敗: ${error.message}` };
+  }
+}
