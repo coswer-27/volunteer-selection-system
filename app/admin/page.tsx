@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [newClubName, setNewClubName] = useState('');
   const [newCapacity, setNewCapacity] = useState('');
   const [newDescription, setNewDescription] = useState(''); // 新增：介紹
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImageFile, setNewImageFile] = useState('');
   const [newClubLink, setNewClubLink] = useState(''); // 👈 新增這行
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -85,8 +85,8 @@ export default function AdminPage() {
     setIsSubmitting(true);
     setMessage("正在同步更新社團資料...");
 
-    // 👇 這裡加上 newDescription 跟 newImageUrl
-    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageUrl, newClubLink);
+    // 👇 這裡加上 newDescription 跟 newImageFile
+    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageFile, newClubLink);
     
     setMessage(result.message);
     if (result.success) {
@@ -101,7 +101,7 @@ export default function AdminPage() {
     setNewClubName(club.name);
     setNewCapacity(club.capacity.toString());
     setNewDescription(club.description || ''); // 帶入介紹
-    setNewImageUrl(club.imageUrl || '');       // 帶入圖片
+    setNewImageFile(club.imageUrl || '');       // 帶入圖片
     setNewClubLink(club.clubLink || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -111,7 +111,7 @@ export default function AdminPage() {
     setNewClubName('');
     setNewCapacity('');
     setNewDescription(''); // 清空介紹
-    setNewImageUrl('');    // 清空圖片
+    setNewImageFile('');    // 清空圖片
     setNewClubLink('');
   };
 
@@ -192,14 +192,13 @@ export default function AdminPage() {
 
   // 🔥 匯出 CSV 模板 (帶入現有資料)
   const handleExportCSV = () => {
-    // 整理成我們要的中文欄位格式
     const exportData = clubs.length > 0 ? clubs.map(club => ({
       '名稱': club.name || '',
       '名額': club.capacity || '',
-      '封面圖片網址': club.imageUrl || '',
+      '圖片檔名': club.imageFile || '',
       '社團連結': club.clubLink || '',
       '社團介紹': club.description || ''
-    })) : [{ '名稱': '', '名額': '', '封面圖片網址': '', '社團連結': '', '社團介紹': '' }]; // 沒資料就給空模板
+    })) : [{ '名稱': '', '名額': '', '圖片檔名': '', '社團連結': '', '社團介紹': '' }];
 
     const csv = Papa.unparse(exportData);
     // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 打開 CSV 時不會中文亂碼
@@ -318,8 +317,8 @@ export default function AdminPage() {
           {/* 第二排：圖片與連結 */}
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="flex-1 w-full">
-              <label className="block text-sm font-medium text-gray-600 mb-1">社團圖片網址</label>
-              <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="https://..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
+              <label className="block text-sm font-medium text-gray-600 mb-1">圖片檔名 (例如: guitar.jpg)</label>
+              <input type="text" value={newImageFile} onChange={(e) => setNewImageFile(e.target.value)} placeholder="留白則使用預設圖" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-600 mb-1">粉專連結 </label>

@@ -131,6 +131,14 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 1. 定義這段解析函數 (可以放在元件內部的開頭)
+  const resolveLocalImage = (filename: string | undefined) => {
+    if (filename && filename.trim() !== '') {
+      return `/clubs/${filename.trim()}`;
+    }
+    return '/clubs/default.jpg'; // 如果沒填，就抓 public/clubs/default.jpg
+  };
+
   // 4. 計算熱度排行榜 (取登記人數最高的前 3 名)
   const trendingClubs = [...clubs]
     .sort((a, b) => (b.applied || 0) - (a.applied || 0))
@@ -229,7 +237,18 @@ export default function Home() {
                     
                     {/* 照片區塊 */}
                     <div className="h-40 w-full relative bg-gray-200">
-                      <img src={imageUrl} alt={club.name} className="w-full h-full object-cover" />
+                      <img 
+                        src={resolveLocalImage(club.imageFile)} 
+                        alt={club.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 終極防禦：如果檔名打錯找不到圖片，立刻切換回預設圖，絕對不破圖
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.endsWith('/default.jpg')) {
+                            target.src = '/clubs/default.jpg';
+                          }
+                        }}
+                      />
                       {isMyClub && (
                         <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md animate-pulse">
                           ✅ 已登記志願

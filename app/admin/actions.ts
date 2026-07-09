@@ -22,39 +22,29 @@ if (process.env.NODE_ENV === 'development') {
   } catch (e) {}
 }
 
-/**
- * 🔥 後端儲存或更新社團資料 (Server Action) - 支援圖片、介紹與外部連結
- */
+// 替換 1：更新 saveClubAction
 export async function saveClubAction(
   clubId: string | null, 
   name: string, 
   capacity: number, 
   description: string, 
-  imageUrl: string,
-  clubLink: string // 👈 新增這個參數
+  imageFile: string, // 👈 改成接收檔名
+  clubLink: string
 ) {
   try {
+    const data = {
+      name: name.trim(),
+      capacity: Number(capacity),
+      description: description.trim(),
+      imageFile: imageFile.trim(), // 👈 存入資料庫的變成 imageFile
+      clubLink: clubLink.trim()
+    };
+
     if (clubId) {
-      const clubRef = doc(db, 'clubs', clubId);
-      await updateDoc(clubRef, {
-        name: name.trim(),
-        capacity: Number(capacity),
-        description: description.trim(),
-        imageUrl: imageUrl.trim(),
-        clubLink: clubLink.trim() // 👈 存入資料庫
-      });
+      await updateDoc(doc(db, 'clubs', clubId), data);
       return { success: true, message: "✅ 社團資料修改成功！" };
     } else {
-      const clubsRef = collection(db, 'clubs');
-      await addDoc(clubsRef, {
-        name: name.trim(),
-        capacity: Number(capacity),
-        description: description.trim(),
-        imageUrl: imageUrl.trim(),
-        clubLink: clubLink.trim(), // 👈 存入資料庫
-        applied: 0,
-        enrolled: 0
-      });
+      await addDoc(collection(db, 'clubs'), { ...data, applied: 0, enrolled: 0 });
       return { success: true, message: "✅ 成功建立新社團！" };
     }
   } catch (error: any) {
@@ -173,11 +163,11 @@ export async function importClubsBulkAction(parsedData: any[]) {
         batch.set(newDocRef, {
           name: String(club['名稱']).trim(),
           capacity: Number(club['名額']) || 0,
-          imageUrl: club['封面圖片網址'] ? String(club['封面圖片網址']).trim() : '',
+          imageFile: club['圖片檔名'] ? String(club['圖片檔名']).trim() : '', // 👈 改吃 CSV 的「圖片檔名」
           clubLink: club['社團連結'] ? String(club['社團連結']).trim() : '',
           description: club['社團介紹'] ? String(club['社團介紹']).trim() : '',
-          applied: 0,  // 新社團初始值
-          enrolled: 0  // 新社團初始值
+          applied: 0,  
+          enrolled: 0  
         });
       });
       await batch.commit();

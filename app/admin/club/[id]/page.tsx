@@ -20,7 +20,7 @@ export default function AdminClubEditPage() {
   const [name, setName] = useState('');
   const [capacity, setCapacity] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState('');
   const [clubLink, setClubLink] = useState('');
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function AdminClubEditPage() {
         setName(data.name || '');
         setCapacity(data.capacity?.toString() || '');
         setDescription(data.description || '');
-        setImageUrl(data.imageUrl || '');
+        setImageFile(data.imageFile || '');
         setClubLink(data.clubLink || '');
       } else {
         setMessage("找不到該社團資料");
@@ -59,7 +59,7 @@ export default function AdminClubEditPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('正在更新社團資料...');
-    const result = await saveClubAction(clubId, name, Number(capacity), description, imageUrl, clubLink);
+    const result = await saveClubAction(clubId, name, Number(capacity), description, imageFile, clubLink);
     setMessage(result.message);
     setIsSubmitting(false);
     
@@ -97,8 +97,8 @@ export default function AdminClubEditPage() {
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">社團圖片網址 (URL)</label>
-            <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">本機圖片檔名 (如: dance.png)</label>
+            <input type="text" value={imageFile} onChange={e => setImageFile(e.target.value)} placeholder="留白則使用 default.jpg" className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">粉專連結 (URL)</label>
