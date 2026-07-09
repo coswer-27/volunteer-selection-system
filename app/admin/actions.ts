@@ -29,7 +29,8 @@ export async function saveClubAction(
   capacity: number, 
   description: string, 
   imageFile: string, // 👈 改成接收檔名
-  clubLink: string
+  clubLink: string,
+  hashtags: string
 ) {
   try {
     const data = {
@@ -37,7 +38,8 @@ export async function saveClubAction(
       capacity: Number(capacity),
       description: description.trim(),
       imageFile: imageFile.trim(), // 👈 存入資料庫的變成 imageFile
-      clubLink: clubLink.trim()
+      clubLink: clubLink.trim(),
+      hashtags: hashtags.trim()
     };
 
     if (clubId) {
@@ -173,7 +175,8 @@ export async function importClubsBulkAction(parsedData: any[]) {
           capacity: Number(club['名額']) || 0,
           imageFile: club['圖片檔名'] ? String(club['圖片檔名']).trim() : '',
           clubLink: club['社團連結'] ? String(club['社團連結']).trim() : '',
-          description: club['社團介紹'] ? String(club['社團介紹']).trim() : ''
+          description: club['社團介紹'] ? String(club['社團介紹']).trim() : '',
+          hashtags: club['Hashtags'] ? String(club['Hashtags']).trim() : ''
         };
 
         // 2. 比對對照表：判斷是更新還是新增

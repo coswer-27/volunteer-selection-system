@@ -22,6 +22,7 @@ export default function AdminClubEditPage() {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState('');
   const [clubLink, setClubLink] = useState('');
+  const [hashtags, setHashtags] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -45,6 +46,7 @@ export default function AdminClubEditPage() {
         setDescription(data.description || '');
         setImageFile(data.imageFile || '');
         setClubLink(data.clubLink || '');
+        setHashtags(data.hashtags || '');
       } else {
         setMessage("找不到該社團資料");
       }
@@ -59,7 +61,7 @@ export default function AdminClubEditPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('正在更新社團資料...');
-    const result = await saveClubAction(clubId, name, Number(capacity), description, imageFile, clubLink);
+    const result = await saveClubAction(clubId, name, Number(capacity), description, imageFile, clubLink, hashtags);
     setMessage(result.message);
     setIsSubmitting(false);
     
@@ -103,6 +105,10 @@ export default function AdminClubEditPage() {
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">粉專連結 (URL)</label>
             <input type="url" value={clubLink} onChange={e => setClubLink(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hashtags 標籤 (用逗號分隔)</label>
+            <input type="text" value={hashtags} onChange={e => setHashtags(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="音樂,表演,迎新" />
           </div>
         </div>
 

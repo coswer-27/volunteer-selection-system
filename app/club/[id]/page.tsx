@@ -102,6 +102,15 @@ export default function ClubDetailPage() {
           </div>
           <div className="p-8">
             <h1 className="text-4xl font-black text-gray-800 mb-6">{club.name}</h1>
+            {club.hashtags && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {club.hashtags.split(/[,，、]+/).filter(Boolean).map((tag: string, i: number) => (
+                  <span key={i} className="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 text-sm font-bold rounded-lg border border-indigo-100 shadow-sm">
+                    #{tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
             <p className="text-lg text-gray-600 mb-8 whitespace-pre-wrap">{club.description || "歡迎加入我們！"}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="bg-gray-50 p-4 rounded-xl border"><p className="text-sm text-gray-500">總名額</p><p className="text-2xl font-bold">{club.capacity} 人</p></div>

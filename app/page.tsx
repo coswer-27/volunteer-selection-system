@@ -276,7 +276,18 @@ export default function Home() {
                           club.name
                         )}
                       </h2>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{description}</p>
+                      {/* Hashtag 標籤區塊 (取代原本的長篇 description) */}
+                      <div className="flex flex-wrap gap-1.5 mb-4 flex-1 items-start content-start">
+                        {club.hashtags ? (
+                          club.hashtags.split(/[,，、]+/).filter(Boolean).map((tag: string, i: number) => (
+                            <span key={i} className="px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-md border border-indigo-100">
+                              #{tag.trim()}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">無標籤</span>
+                        )}
+                      </div>
                       
                       <div className="bg-gray-50 rounded-lg p-3 mb-5 text-sm text-gray-700 space-y-1.5 border">
                         <div className="flex justify-between"><span>總名額：</span><span className="font-medium">{club.capacity} 人</span></div>

@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [newDescription, setNewDescription] = useState(''); // 新增：介紹
   const [newImageFile, setNewImageFile] = useState('');
   const [newClubLink, setNewClubLink] = useState(''); // 👈 新增這行
+  const [newHashtags, setNewHashtags] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // 名單檢視狀態
@@ -86,7 +87,7 @@ export default function AdminPage() {
     setMessage("正在同步更新社團資料...");
 
     // 👇 這裡加上 newDescription 跟 newImageFile
-    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageFile, newClubLink);
+    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageFile, newClubLink, newHashtags);
     
     setMessage(result.message);
     if (result.success) {
@@ -113,6 +114,7 @@ export default function AdminPage() {
     setNewDescription(''); // 清空介紹
     setNewImageFile('');    // 清空圖片
     setNewClubLink('');
+    setNewHashtags('');
   };
 
   // 🔥 處理單一社團刪除
@@ -206,9 +208,10 @@ export default function AdminPage() {
       '名稱': club.name || '',
       '名額': club.capacity || '',
       '圖片檔名': club.imageFile || '',
+      'Hashtags': club.hashtags || '',
       '社團連結': club.clubLink || '',
       '社團介紹': club.description || ''
-    })) : [{ '名稱': '', '名額': '', '圖片檔名': '', '社團連結': '', '社團介紹': '' }];
+    })) : [{ '名稱': '', '名額': '', '圖片檔名': '', 'Hashtags': '', '社團連結': '', '社團介紹': '' }];
 
     const csv = Papa.unparse(exportData);
     // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 打開 CSV 時不會中文亂碼
@@ -336,6 +339,11 @@ export default function AdminPage() {
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-600 mb-1">粉專連結 </label>
               <input type="url" value={newClubLink} onChange={(e) => setNewClubLink(e.target.value)} placeholder="https://instagram.com/..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
+            </div>
+            {/* 新增這排 Hashtags 輸入框 */}
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Hashtags 標籤 (請用逗號分隔，例如：音樂,表演,熱血)</label>
+              <input type="text" value={newHashtags} onChange={(e) => setNewHashtags(e.target.value)} placeholder="音樂,表演,迎新" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
             </div>
           </div>
           
