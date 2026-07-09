@@ -144,36 +144,105 @@ export async function clearAllTestData() {
 }
 
 /**
- * 🔥 後端：批次匯入社團資料 (CSV 解析後寫入)
+ * 🔥 後端：批次匯入社團資料 (支援以「名稱」為基準的 Upsert 更新/新增)
  */
 export async function importClubsBulkAction(parsedData: any[]) {
   try {
-    const CHUNK_SIZE = 400; // 避開 Firestore 500 筆上限
+    // 1. 抓取目前資料庫中所有的社團，建立「名稱 -> ID」的對照表
+    const existingClubsSnapshot = await getDocs(collection(db, 'clubs'));
+    const existingClubsMap = new Map<string, string>();
+    existingClubsSnapshot.forEach(doc => {
+      existingClubsMap.set(doc.data().name, doc.id);
+    });
+
+    const CHUNK_SIZE = 400; 
     const clubsRef = collection(db, 'clubs');
+    let updateCount = 0;
+    let insertCount = 0;
     
     for (let i = 0; i < parsedData.length; i += CHUNK_SIZE) {
       const batch = writeBatch(db);
       const chunk = parsedData.slice(i, i + CHUNK_SIZE);
       
       chunk.forEach(club => {
-        // 如果沒有名稱就略過該行 (避免空白行)
-        if (!club['名稱']) return; 
+        const clubName = String(club['名稱']).trim();
+        if (!clubName) return; 
         
-        const newDocRef = doc(clubsRef); // 自動生成新的 ID
-        batch.set(newDocRef, {
-          name: String(club['名稱']).trim(),
+        const clubDataToSave = {
+          name: clubName,
           capacity: Number(club['名額']) || 0,
-          imageFile: club['圖片檔名'] ? String(club['圖片檔名']).trim() : '', // 👈 改吃 CSV 的「圖片檔名」
+          imageFile: club['圖片檔名'] ? String(club['圖片檔名']).trim() : '',
           clubLink: club['社團連結'] ? String(club['社團連結']).trim() : '',
-          description: club['社團介紹'] ? String(club['社團介紹']).trim() : '',
-          applied: 0,  
-          enrolled: 0  
-        });
+          description: club['社團介紹'] ? String(club['社團介紹']).trim() : ''
+        };
+
+        // 2. 比對對照表：判斷是更新還是新增
+        const existingId = existingClubsMap.get(clubName);
+        if (existingId) {
+          // 存在 -> 更新 (不覆蓋原本的 applied 和 enrolled 人數)
+          batch.update(doc(db, 'clubs', existingId), clubDataToSave);
+          updateCount++;
+        } else {
+          // 不存在 -> 新增
+          const newDocRef = doc(clubsRef);
+          batch.set(newDocRef, {
+            ...clubDataToSave,
+            applied: 0,
+            enrolled: 0
+          });
+          insertCount++;
+        }
       });
       await batch.commit();
     }
-    return { success: true, message: `✅ 成功匯入 ${parsedData.length} 筆社團資料！` };
+    return { success: true, message: `✅ CSV 處理完成！更新了 ${updateCount} 筆，新增了 ${insertCount} 筆。` };
   } catch (error: any) {
     return { success: false, message: `❌ 匯入失敗: ${error.message}` };
+  }
+}
+
+/**
+ * 🔥 後端：單純清除所有「學生選填紀錄」(包含自動將社團人數歸零)
+ */
+export async function clearAllRegistrationsAction() {
+  try {
+    const batch = writeBatch(db);
+    
+    // 1. 刪除 registrations 集合內的所有資料
+    const regSnapshot = await getDocs(collection(db, 'registrations'));
+    regSnapshot.docs.forEach((d) => batch.delete(d.ref));
+
+    // 2. 為了資料一致性，將所有 clubs 的 applied 與 enrolled 歸零
+    const clubSnapshot = await getDocs(collection(db, 'clubs'));
+    clubSnapshot.docs.forEach((c) => {
+      batch.update(c.ref, { applied: 0, enrolled: 0 });
+    });
+
+    await batch.commit();
+    return { success: true, message: "✅ 已成功清空所有學生的選填紀錄，並將社團登記人數歸零！" };
+  } catch (error: any) {
+    return { success: false, message: `清除紀錄失敗: ${error.message}` };
+  }
+}
+
+/**
+ * 🔥 後端：清除所有「社團資料」(會連帶刪除所有依附的報名紀錄，避免產生幽靈資料)
+ */
+export async function clearAllClubsAction() {
+  try {
+    const batch = writeBatch(db);
+    
+    // 1. 刪除 clubs 集合內的所有資料
+    const clubSnapshot = await getDocs(collection(db, 'clubs'));
+    clubSnapshot.docs.forEach((d) => batch.delete(d.ref));
+
+    // 2. 社團都沒了，選填紀錄留著也沒用，一併級聯刪除 (Cascading Delete)
+    const regSnapshot = await getDocs(collection(db, 'registrations'));
+    regSnapshot.docs.forEach((d) => batch.delete(d.ref));
+
+    await batch.commit();
+    return { success: true, message: "✅ 已成功刪除所有社團資料與相關的選填紀錄！" };
+  } catch (error: any) {
+    return { success: false, message: `清除社團失敗: ${error.message}` };
   }
 }

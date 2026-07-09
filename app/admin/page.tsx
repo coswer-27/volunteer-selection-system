@@ -6,7 +6,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '../../lib/firebaseConfig';
 // 引入包含社團 CRUD 的 Server Actions
-import { runRandomDrawOnServer, clearAllTestData, saveClubAction, deleteClubAction, importClubsBulkAction } from './actions';
+import { runRandomDrawOnServer, saveClubAction, deleteClubAction, importClubsBulkAction, clearAllRegistrationsAction, clearAllClubsAction } from './actions';
 import Papa from 'papaparse';
 import { useRef } from 'react';
 
@@ -145,18 +145,28 @@ export default function AdminPage() {
     setIsSubmitting(false);
   };
 
-  // 呼叫後端 Action：清除所有資料
-  const handleClearDatabase = async () => {
-    if (!window.confirm("⚠️ 警告：這將會刪除所有社團與報名資料。確定要執行嗎？")) return;
-    if (!window.confirm("最後確認：真的要清空資料庫嗎？")) return;
+  // 清除「所有選填紀錄」
+  const handleClearRegistrations = async () => {
+    if (!window.confirm("⚠️ 確定要清除「所有學生的志願選填紀錄」嗎？\n(社團資料將會保留，但登記人數會歸零)")) return;
+    
+    setIsSubmitting(true);
+    setMessage("正在清除選填紀錄與重置人數...");
+    const result = await clearAllRegistrationsAction();
+    setMessage(result.message);
+    if (result.success) await fetchClubs(); 
+    setIsSubmitting(false);
+  };
+
+  // 清除「所有社團資料」
+  const handleClearClubs = async () => {
+    if (!window.confirm("⚠️ 警告：確定要刪除「所有社團」嗎？\n這將會連帶清空所有學生的選填紀錄！此動作無法復原！")) return;
+    if (!window.confirm("最後確認：真的要清空所有社團資料嗎？")) return;
 
     setIsSubmitting(true);
-    setMessage("正在清除所有測試資料庫...");
-    const result = await clearAllTestData();
+    setMessage("正在清除所有社團資料...");
+    const result = await clearAllClubsAction();
     setMessage(result.message);
-    if (result.success) {
-      await fetchClubs(); 
-    }
+    if (result.success) await fetchClubs(); 
     setIsSubmitting(false);
   };
 
@@ -281,8 +291,11 @@ export default function AdminPage() {
           <button onClick={handleRunRandomDraw} disabled={isSubmitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
             執行隨機抽籤
           </button>
-          <button onClick={handleClearDatabase} disabled={isSubmitting} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
-            清除所有選填志願
+          <button onClick={handleClearRegistrations} disabled={isSubmitting} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+            🧹 清空選填紀錄
+          </button>
+          <button onClick={handleClearClubs} disabled={isSubmitting} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium shadow transition-colors disabled:bg-gray-400">
+            🗑️ 刪除所有社團
           </button>
           <button onClick={() => signOut(auth)} className="px-4 py-2 text-sm text-gray-600 border rounded hover:bg-gray-50">
             登出
