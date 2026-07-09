@@ -270,23 +270,13 @@ export default function Home() {
                         </div>
                       </div>
                       
-                      {/* 操作按鈕 */}
-                      {isMyClub ? (
-                        <button onClick={() => handleCancelRegister(club.id, club.name)} disabled={isSubmitting} className="w-full py-2.5 rounded-xl text-indigo-700 font-bold bg-indigo-50 border-2 border-indigo-200 hover:bg-indigo-100 transition-colors">
-                          取消登記 (退選)
-                        </button>
-                      ) : (
+                      {/* 操作按鈕改為進入詳細頁面 */}
                         <button 
-                          onClick={() => handleRegister(club.id)} 
-                          disabled={isSubmitting || myRegisteredClubId !== null} 
-                          className={`w-full py-2.5 rounded-xl font-bold transition-all shadow-sm
-                            ${myRegisteredClubId !== null 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-gray-800 hover:bg-black text-white hover:shadow-md'}`}
+                          onClick={() => window.location.href = `/club/${club.id}`} 
+                          className="w-full mt-4 py-2.5 rounded-xl font-bold bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 transition-all shadow-sm"
                         >
-                          {myRegisteredClubId !== null ? '已選填其他志願' : '登記此志願'}
+                          查看社團詳情 & 報名
                         </button>
-                      )}
                     </div>
                   </div>
                 );

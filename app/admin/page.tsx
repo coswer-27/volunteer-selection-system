@@ -376,9 +376,12 @@ export default function AdminPage() {
                       名單
                     </button>
                     {/* 🔥 補回：編輯與刪除按鈕 */}
-                    <button onClick={() => setTransitToEdit(club)} className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
-                      修改
-                    </button>
+                      <button 
+                          onClick={() => window.location.href = `/admin/club/${club.id}`} 
+                          className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                        >
+                        編輯頁面
+                      </button>
                     <button onClick={() => handleDeleteClub(club.id, club.name)} className="px-3 py-1.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors">
                       刪除
                     </button>
