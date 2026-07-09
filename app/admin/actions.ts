@@ -16,9 +16,11 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 
-try {
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
-} catch (e) {}
+if (process.env.NODE_ENV === 'development') {
+  try {
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  } catch (e) {}
+}
 
 /**
  * 🔥 後端儲存或更新社團資料 (Server Action) - 支援圖片、介紹與外部連結
