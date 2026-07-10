@@ -27,6 +27,9 @@ export default function Home() {
   // 記錄該學生的報名狀況
   const [myRegisteredClubId, setMyRegisteredClubId] = useState<string | null>(null);
 
+  // 🔥 新增：倒數計時狀態，預設與後端 revalidate 一致設定為 60 秒
+  const [countdown, setCountdown] = useState(60);
+
   // 1. 初始化與讀取資料
   const fetchClubs = async () => {
     try {
@@ -36,6 +39,7 @@ export default function Home() {
       
       if (data.success) {
         setClubs(data.clubs);
+        setCountdown(60);
       } else {
         console.error("讀取失敗:", data.error);
       }
@@ -46,6 +50,28 @@ export default function Home() {
     }
   };
 
+  // 初始載入
+  useEffect(() => {
+    fetchClubs();
+  }, []);
+
+  // 🔥 新增：處理每秒倒數的計時器
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          // 👈 當秒數歸零時，自動在背景呼叫 API 重新整理數據
+          fetchClubs(); 
+          return 60; // 暫時回到 60，等待 fetchClubs 成功後再次被精準重設
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // 元件卸載時清除計時器，防止記憶體洩漏 (Memory Leak)
+    return () => clearInterval(timer);
+  }, []);
+  
   const checkStudentStatus = async (sId: string) => {
     try {
       const regDoc = await getDoc(doc(db, 'registrations', sId));
@@ -368,6 +394,28 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* 🔥 新增：首頁最底部的更新倒數計時與免責說明 */}
+      <footer className="mt-16 border-t border-gray-200 bg-white shadow-inner rounded-t-2xl pt-8 pb-10 px-4">
+        <div className="max-w-md mx-auto text-center">
+          {/* 免責說明 */}
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+            <p>提示：當前登記人數與中籤率非絕對即時資料。</p>
+          </div>
+          
+          {/* 倒數計時顯示 */}
+          <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-indigo-600 font-semibold bg-indigo-50/60 px-4 py-1.5 rounded-full border border-indigo-100">
+            <span>🔄 系統將在</span>
+            <span className="w-6 text-center font-black text-sm text-indigo-700 bg-white rounded shadow-sm border border-indigo-200 py-0.5">
+              {countdown}
+            </span>
+            <span>秒後自動同步最新數據</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
