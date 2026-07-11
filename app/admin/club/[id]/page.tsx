@@ -23,6 +23,7 @@ export default function AdminClubEditPage() {
   const [imageFile, setImageFile] = useState('');
   const [clubLink, setClubLink] = useState('');
   const [hashtags, setHashtags] = useState('');
+  const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -61,7 +62,7 @@ export default function AdminClubEditPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('正在更新社團資料...');
-    const result = await saveClubAction(clubId, name, Number(capacity), description, imageFile, clubLink, hashtags);
+    const result = await saveClubAction(clubId, name, Number(capacity), description, imageFile, clubLink, hashtags, newCategory);
     setMessage(result.message);
     setIsSubmitting(false);
     

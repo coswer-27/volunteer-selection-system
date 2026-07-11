@@ -33,6 +33,7 @@ export default function AdminPage() {
   const [newClubLink, setNewClubLink] = useState(''); // 👈 新增這行
   const [newHashtags, setNewHashtags] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [newCategory, setNewCategory] = useState('');
 
   // 名單檢視狀態
   const [selectedClubForList, setSelectedClubForList] = useState<any>(null);
@@ -86,8 +87,7 @@ export default function AdminPage() {
     setIsSubmitting(true);
     setMessage("正在同步更新社團資料...");
 
-    // 👇 這裡加上 newDescription 跟 newImageFile
-    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageFile, newClubLink, newHashtags);
+    const result = await saveClubAction(editingId, newClubName, Number(newCapacity), newDescription, newImageFile, newClubLink, newHashtags, newCategory);
     
     setMessage(result.message);
     if (result.success) {
@@ -210,8 +210,9 @@ export default function AdminPage() {
       '圖片檔名': club.imageFile || '',
       'Hashtags': club.hashtags || '',
       '社團連結': club.clubLink || '',
-      '社團介紹': club.description || ''
-    })) : [{ '名稱': '', '名額': '', '圖片檔名': '', 'Hashtags': '', '社團連結': '', '社團介紹': '' }];
+      '社團介紹': club.description || '',
+      '社團分類': club.category || ''
+    })) : [{ '名稱': '', '名額': '', '圖片檔名': '', 'Hashtags': '', '社團連結': '', '社團介紹': '' ,'社團分類': '',}];
 
     const csv = Papa.unparse(exportData);
     // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 打開 CSV 時不會中文亂碼
@@ -351,6 +352,10 @@ export default function AdminPage() {
           <div className="w-full">
             <label className="block text-sm font-medium text-gray-600 mb-1">社團簡介</label>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={2} placeholder="輸入一段吸引人的社團簡介..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500 resize-none" />
+          </div>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-600 mb-1">社團大分類 (例如：學術性、康樂性)</label>
+            <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="學術性" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
           </div>
 
           <div className="flex gap-2 justify-end mt-2">
