@@ -247,7 +247,9 @@ export default function Home() {
                           {club.applied || 0} 人登記
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800">{club.name}</h3>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 tracking-tight break-all line-clamp-1" title={club.name}>
+                        {club.name}
+                      </h3>
                     </div>
                   </div>
                 </div>
@@ -265,7 +267,7 @@ export default function Home() {
           {clubs.length === 0 ? (
             <div className="text-center py-20 text-gray-500">系統中目前沒有社團資料...</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {clubs.map((club) => {
                 const isMyClub = myRegisteredClubId === club.id;
                 const appliedCount = club.applied || 0;
@@ -303,7 +305,7 @@ export default function Home() {
                     </div>
 
                     {/* 內容區塊 */}
-                    <div className="p-5 flex-1 flex flex-col">
+                    <div className="p-6 flex-1 flex flex-col">
                       <h2 className="text-xl font-bold text-gray-800 mb-2 truncate">
                         {club.clubLink ? (
                           <a 
