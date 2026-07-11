@@ -32,12 +32,63 @@ export default function Home() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('所有社團');
+  const [sortBy, setSortBy] = useState('default');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const categories = ['所有社團', ...Array.from(new Set(clubs.map(c => c.category).filter(Boolean)))];
 
+  // 1. 先過濾分類
   const filteredClubs = selectedCategory === '所有社團' 
     ? clubs 
     : clubs.filter(c => c.category === selectedCategory);
+
+  // 2. 再依照 sortBy 與 sortOrder 進行排序
+  const sortedClubs = [...filteredClubs].sort((a, b) => {
+    
+    const regA = a.registered || 0; 
+    const regB = b.registered || 0;
+    const capA = a.capacity || 1;
+    const capB = b.capacity || 1;
+
+    let comparison = 0; // 用來暫存「升冪(小到大)」狀態下的比較結果
+
+    switch (sortBy) {
+      case 'name':
+        comparison = a.name.localeCompare(b.name, 'zh-TW');
+        break;
+      
+      case 'popularity':
+        // 基礎邏輯：A - B (升冪，人數少排前面)
+        comparison = regA - regB;
+        break;
+      
+      case 'category':
+        const catA = a.category || '';
+        const catB = b.category || '';
+        comparison = catA.localeCompare(catB, 'zh-TW');
+        break;
+      
+      case 'probability':
+        const probA = regA === 0 ? 1 : Math.min(1, capA / regA);
+        const probB = regB === 0 ? 1 : Math.min(1, capB / regB);
+        
+        if (probA === probB) {
+          const remainingA = Math.max(0, capA - regA);
+          const remainingB = Math.max(0, capB - regB);
+          // 如果機率一樣，用剩餘名額來比
+          comparison = remainingA - remainingB;
+        } else {
+          comparison = probA - probB;
+        }
+        break;
+      
+      default:
+        return 0;
+    }
+
+    // 🔥 核心反轉邏輯：如果是降冪(desc)，就把比較結果加個負號反轉！
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
 
   // 1. 初始化與讀取資料
   const fetchClubs = async () => {
@@ -203,7 +254,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* 頂部導覽列 */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-black text-indigo-700 tracking-tight">新生營 社團志願系統</h1>
           <div>
             {studentProfile ? (
@@ -226,14 +277,51 @@ export default function Home() {
       </nav>
 
 {/* 🍔 漢堡選單按鈕 (放在首頁明顯的地方，例如標題旁邊或頂部) */}
-      <div className="max-w-7xl mx-auto px-4 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 font-bold rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 font-bold rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           分類篩選
         </button>
+
+        {/* 右側：排序工具群組 */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* 修正：加上 whitespace-nowrap 確保這四個字不會被擠到斷行 */}
+          <span className="text-sm font-medium text-gray-500 whitespace-nowrap">排序方式：</span>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
+          >
+            <option value="default">預設排序</option>
+            <option value="name">名稱 (筆畫/拼音)</option>
+            <option value="popularity">🔥 熱度 (登記人數)</option>
+            <option value="probability">🎯 中籤機率</option>
+            <option value="category">📁 依社團分類</option>
+          </select>
+
+          {/* 🔥 新增：升降冪切換按鈕 */}
+          <button
+            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+            className="p-2.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors shadow-sm flex items-center justify-center flex-shrink-0"
+            title={sortOrder === 'asc' ? "目前為升冪 (點擊切換降冪)" : "目前為降冪 (點擊切換升冪)"}
+          >
+            {sortOrder === 'asc' ? (
+              // 升冪 Icon (由小到大)
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+              </svg>
+            ) : (
+              // 降冪 Icon (由大到小)
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ⬛ 側邊欄的黑色半透明遮罩 (點擊旁邊可關閉) */}
@@ -275,7 +363,7 @@ export default function Home() {
 
       {/* 系統訊息提示 */}
       {sysMessage && (
-        <div className="max-w-6xl mx-auto mt-6 px-4">
+        <div className="max-w-7xl mx-auto mt-6 px-4">
           <div className={`p-4 rounded-lg font-medium shadow-sm flex items-center justify-between ${sysMessage.includes('成功') || sysMessage.includes('歡迎') ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 'bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500'}`}>
             {sysMessage}
             <button onClick={() => setSysMessage('')} className="text-xl leading-none opacity-50 hover:opacity-100">&times;</button>
@@ -283,7 +371,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-4 mt-8">
+      <div className="max-w-7xl mx-auto px-4 mt-8">
         
         {/* 🔥 熱度排行榜區塊 */}
         {clubs.length > 0 && (
@@ -324,8 +412,8 @@ export default function Home() {
           {clubs.length === 0 ? (
             <div className="text-center py-20 text-gray-500">系統中目前沒有社團資料...</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredClubs.map((club) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {sortedClubs.map((club) => {
                 const isMyClub = myRegisteredClubId === club.id;
                 const appliedCount = club.applied || 0;
                 let rateText = "100%";
