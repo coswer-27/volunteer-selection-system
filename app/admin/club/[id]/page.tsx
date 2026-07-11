@@ -113,6 +113,11 @@ export default function AdminClubEditPage() {
           </div>
         </div>
 
+        <div className="w-full">
+            <label className="block text-sm font-medium text-gray-600 mb-1">社團分類</label>
+            <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
+        </div>
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">社團簡介</label>
           <textarea rows={6} value={description} onChange={e => setDescription(e.target.value)} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-y" placeholder="輸入一段吸引人的社團簡介..."></textarea>

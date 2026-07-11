@@ -348,14 +348,15 @@ export default function AdminPage() {
             </div>
           </div>
           
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-600 mb-1">社團分類</label>
+            <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
+          </div>
+
           {/* 第三排：介紹 */}
           <div className="w-full">
             <label className="block text-sm font-medium text-gray-600 mb-1">社團簡介</label>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} rows={2} placeholder="輸入一段吸引人的社團簡介..." className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500 resize-none" />
-          </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-600 mb-1">社團大分類 (例如：學術性、康樂性)</label>
-            <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="學術性" className="w-full border p-2 rounded bg-white focus:outline-none focus:border-indigo-500" />
           </div>
 
           <div className="flex gap-2 justify-end mt-2">
