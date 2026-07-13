@@ -287,49 +287,44 @@ export default function Home() {
         </div>
       </nav>
 
-{/* 🍔 漢堡選單按鈕 (放在首頁明顯的地方，例如標題旁邊或頂部) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+      {/* 🍔 分類篩選與排序工具列 (已修正手機版間距與對齊) */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
+        
+        {/* 左側：分類篩選按鈕 */}
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 font-bold rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 font-bold rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center sm:justify-start"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           分類篩選
         </button>
 
         {/* 右側：排序工具群組 */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* 修正：加上 whitespace-nowrap 確保這四個字不會被擠到斷行 */}
-          <span className="text-sm font-medium text-gray-500 whitespace-nowrap">排序方式：</span>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto bg-white p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-none border-gray-100">
+          <span className="text-sm font-medium text-gray-500 whitespace-nowrap pl-1 sm:pl-0">排序方式：</span>
           
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-none min-w-[140px] border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
           >
             <option value="default">預設排序</option>
-            <option value="name">名稱 (筆畫/拼音)</option>
-            <option value="popularity">🔥 熱度 (登記人數)</option>
-            <option value="probability">🎯 中籤機率</option>
-            <option value="category">📁 依社團分類</option>
+            <option value="name">依名稱 (筆畫/拼音)</option>
+            <option value="popularity">依熱度 (登記人數)</option>
+            <option value="probability">依中籤機率</option>
+            <option value="category">依社團分類</option>
           </select>
 
-          {/* 🔥 新增：升降冪切換按鈕 */}
+          {/* 升降冪切換按鈕 */}
           <button
             onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-            className="p-2.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors shadow-sm flex items-center justify-center flex-shrink-0"
+            className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors shadow-sm flex items-center justify-center flex-shrink-0"
             title={sortOrder === 'asc' ? "目前為升冪 (點擊切換降冪)" : "目前為降冪 (點擊切換升冪)"}
           >
             {sortOrder === 'asc' ? (
-              // 升冪 Icon (由小到大)
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-              </svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
             ) : (
-              // 降冪 Icon (由大到小)
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-              </svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" /></svg>
             )}
           </button>
         </div>
