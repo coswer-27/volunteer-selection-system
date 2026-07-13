@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebaseConfig';
 import { registerClubTransaction, cancelRegistrationTransaction } from '../lib/clubService';
+import { verifyStudentLogin } from '../app/actions/auth';
 
 // 定義學生資料型別
 interface StudentProfile {
@@ -170,27 +171,38 @@ export default function Home() {
   // 2. 登入與登出邏輯
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginForm.studentId || !loginForm.name || !loginForm.className) return;
-
     setIsSubmitting(true);
+    
     const formattedId = loginForm.studentId.trim().toUpperCase();
-    const profile = { ...loginForm, studentId: formattedId };
+    const formattedName = loginForm.name.trim();
+    const formattedClass = loginForm.className.trim();
 
     try {
-      // 將學生基本資料寫入 Firestore，方便管理員未來匯出名單
-      await setDoc(doc(db, 'students', formattedId), profile, { merge: true });
+      // 🔥 1. 呼叫 Server Action 進行後端 CSV 嚴格驗證
+      const verifyResult = await verifyStudentLogin(formattedId, formattedName, formattedClass);
+
+      if (!verifyResult.success) {
+        // 驗證失敗：擋下登入，顯示錯誤訊息，且絕對不寫入 Firebase
+        setSysMessage(`登入失敗：${verifyResult.message}`);
+        setIsSubmitting(false);
+        return; 
+      }
+
+      // 🔥 2. 驗證成功：放行，並寫入 Firebase 記錄
+      const profile = { studentId: formattedId, name: formattedName, className: formattedClass };
       
-      // 存在本地端，保持登入狀態
+      await setDoc(doc(db, 'students', formattedId), profile, { merge: true });
       localStorage.setItem('studentProfile', JSON.stringify(profile));
-      setStudentProfile(profile);
+      setStudentProfile(profile); 
       setShowLoginModal(false);
-      setSysMessage(`歡迎回來，${profile.className} ${profile.name}！`);
       
       await checkStudentStatus(formattedId);
-    } catch (error: any) {
-      setSysMessage(`登入失敗：${error.message}`);
-    } finally {
-      setIsSubmitting(false);
+      setSysMessage(`歡迎回來，${formattedClass} ${formattedName}！`);
+
+    } catch (error: any) { 
+      setSysMessage(`系統錯誤：${error.message}`); 
+    } finally { 
+      setIsSubmitting(false); 
     }
   };
 
@@ -252,7 +264,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      {/* 頂部導覽列 */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-black text-indigo-700 tracking-tight">新生營 社團志願系統</h1>

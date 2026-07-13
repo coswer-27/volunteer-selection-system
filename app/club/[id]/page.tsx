@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebaseConfig';
 import { registerClubTransaction, cancelRegistrationTransaction } from '../../../lib/clubService';
+import { verifyStudentLogin } from '../../../app/actions/auth';
 
 interface StudentProfile { studentId: string; name: string; className: string; }
 
@@ -94,15 +95,38 @@ export default function ClubDetailPage() {
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     const formattedId = loginForm.studentId.trim().toUpperCase();
-    const profile = { ...loginForm, studentId: formattedId };
+    const formattedName = loginForm.name.trim();
+    const formattedClass = loginForm.className.trim();
+
     try {
+      // 🔥 1. 呼叫 Server Action 進行後端 CSV 嚴格驗證
+      const verifyResult = await verifyStudentLogin(formattedId, formattedName, formattedClass);
+
+      if (!verifyResult.success) {
+        // 驗證失敗：擋下登入，顯示錯誤訊息，且絕對不寫入 Firebase
+        setSysMessage(`登入失敗：${verifyResult.message}`);
+        setIsSubmitting(false);
+        return; 
+      }
+
+      // 🔥 2. 驗證成功：放行，並寫入 Firebase 記錄
+      const profile = { studentId: formattedId, name: formattedName, className: formattedClass };
+      
       await setDoc(doc(db, 'students', formattedId), profile, { merge: true });
       localStorage.setItem('studentProfile', JSON.stringify(profile));
-      setStudentProfile(profile); setShowLoginModal(false);
+      setStudentProfile(profile); 
+      setShowLoginModal(false);
+      
       await checkStudentStatus(formattedId);
-    } catch (error: any) { setSysMessage(`登入失敗：${error.message}`); } 
-    finally { setIsSubmitting(false); }
+      setSysMessage(`歡迎回來，${formattedClass} ${formattedName}！`);
+
+    } catch (error: any) { 
+      setSysMessage(`系統錯誤：${error.message}`); 
+    } finally { 
+      setIsSubmitting(false); 
+    }
   };
 
   const handleRegister = async () => {
