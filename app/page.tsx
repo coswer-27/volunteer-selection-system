@@ -381,7 +381,11 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {trendingClubs.map((club, index) => (
-                <div key={`trend-${club.id}`} className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-1 shadow-lg transform transition hover:-translate-y-1">
+                <div 
+                  key={`trend-${club.id}`} 
+                  onClick={() => window.location.href = `/club/${club.id}`}
+                  className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-1 shadow-lg transform transition hover:-translate-y-2 cursor-pointer hover:shadow-xl"
+                >
                   <div className="bg-white h-full w-full rounded-xl p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-2">
