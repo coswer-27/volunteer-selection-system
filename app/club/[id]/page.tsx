@@ -22,16 +22,57 @@ export default function ClubDetailPage() {
   const [loginForm, setLoginForm] = useState({ studentId: '', name: '', className: '' });
   const [myRegisteredClubId, setMyRegisteredClubId] = useState<string | null>(null);
 
-  // 🔥 照片輪播的狀態 (記錄目前顯示第幾張圖)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [gallery, setGallery] = useState<string[]>([]);
+
+  // 自動探測額外照片的函數
+  const detectAdditionalImages = async (filename: string) => {
+    const dotIndex = filename.lastIndexOf('.');
+    if (dotIndex === -1) return;
+
+    const baseName = filename.substring(0, dotIndex);
+    const ext = filename.substring(dotIndex);
+    
+    const validImages = [`/clubs/${filename}`];
+    
+    for (let i = 1; i <= 5; i++) {
+      const testUrl = `/clubs/${baseName}_${i}${ext}`;
+      try {
+        const res = await fetch(testUrl, { method: 'HEAD' });
+        if (res.ok) {
+          validImages.push(testUrl);
+        } else {
+          break;
+        }
+      } catch (error) {
+        break;
+      }
+    }
+    setGallery(validImages);
+  };
 
   const fetchClubData = async () => {
     try {
       const docSnap = await getDoc(doc(db, 'clubs', clubId));
-      if (docSnap.exists()) setClub({ id: docSnap.id, ...docSnap.data() });
-      else setSysMessage("❌ 找不到該社團資料");
-    } catch (error) { console.error(error); } 
-    finally { setIsLoading(false); }
+      if (docSnap.exists()) {
+        const clubData: any = { id: docSnap.id, ...docSnap.data() };
+        setClub(clubData);
+        
+        const baseImg = clubData.imageFile?.trim();
+        if (baseImg) {
+          setGallery([`/clubs/${baseImg}`]);
+          detectAdditionalImages(baseImg);
+        } else {
+          setGallery(['/clubs/default.jpg']);
+        }
+      } else {
+        setSysMessage("❌ 找不到該社團資料");
+      }
+    } catch (error) { 
+      console.error(error); 
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   const checkStudentStatus = async (sId: string) => {
@@ -71,7 +112,7 @@ export default function ClubDetailPage() {
     setSysMessage(result.message);
     if (result.success) { setMyRegisteredClubId(clubId); await fetchClubData(); }
     setIsSubmitting(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // 操作後滾動到頂部看訊息
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancelRegister = async () => {
@@ -90,28 +131,15 @@ export default function ClubDetailPage() {
   const appliedCount = club.applied || 0;
   const isMyClub = myRegisteredClubId === club.id;
 
-  // 確保將檔名轉換為 public 靜態目錄的絕對路徑
-  const resolveLocalImage = (filename: string | undefined | null) => {
-    if (filename && filename.trim() !== '') {
-      return `/clubs/${filename.trim()}`;
-    }
-    return '/clubs/default.jpg';
-  };
-
-  // 🔥 輪播圖陣列邏輯：有 images 陣列就用，沒有就拿單張 imageFile 塞進陣列
-  const gallery = Array.isArray(club.images) && club.images.length > 0 
-    ? club.images.map(resolveLocalImage) 
-    : [resolveLocalImage(club.imageFile)];
-
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % gallery.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      {/* 頂部導覽列 (保留你原本的邏輯) */}
+      {/* 頂部導覽列 */}
       <nav className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-40">
         <button onClick={() => router.push('/')} className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
-          ← 返回首頁
+          &larr; 返回首頁
         </button>
         {studentProfile ? (
           <div className="text-sm font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-full">
@@ -126,7 +154,7 @@ export default function ClubDetailPage() {
 
       {/* 系統訊息提示 */}
       {sysMessage && (
-        <div className="max-w-6xl mx-auto mt-6 px-4">
+        <div className="max-w-3xl mx-auto mt-6 px-4">
           <div className={`p-4 rounded-xl font-bold shadow-sm ${sysMessage.includes('成功') ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
             {sysMessage}
             <button onClick={() => setSysMessage('')} className="float-right hover:opacity-70">&times;</button>
@@ -134,14 +162,16 @@ export default function ClubDetailPage() {
         </div>
       )}
 
-      {/* 主要內容區 */}
-      <main className="max-w-6xl mx-auto px-4 mt-6">
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+      {/* 主要內容區 (調整為 max-w-3xl 讓直式卡片看起來比例更集中好看) */}
+      <main className="max-w-3xl mx-auto px-4 mt-6">
+        {/* 🚀 移除 flex-row，保持預設的 flex-col（直式排版） */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col">
           
           {/* ============================== */}
-          {/* 左側：照片輪播區 (Carousel)      */}
+          {/* 上方：照片輪播區 (高度固定，照片不拉長變形) */}
           {/* ============================== */}
-          <div className="w-full md:w-1/2 relative bg-gray-900 group h-80 md:h-auto min-h-[400px]">
+          {/* 💡 核心優化：設定 h-[400px] 固定高度，確保直的照片不會把圖片框撐高 */}
+          <div className="w-full relative bg-gray-900 group h-[260px] sm:h-[400px]">
             <img 
               src={gallery[currentImageIndex]} 
               alt={club.name} 
@@ -169,7 +199,7 @@ export default function ClubDetailPage() {
                   &rarr;
                 </button>
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-                  {gallery.map((_:string, idx:number) => (
+                  {gallery.map((_: string, idx: number) => (
                     <div key={idx} className={`h-2.5 w-2.5 rounded-full shadow-md transition-all ${idx === currentImageIndex ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80'}`} />
                   ))}
                 </div>
@@ -178,9 +208,9 @@ export default function ClubDetailPage() {
           </div>
 
           {/* ============================== */}
-          {/* 右側：社團詳細資訊區             */}
+          {/* 下方：社團詳細資訊區             */}
           {/* ============================== */}
-          <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col">
+          <div className="p-6 sm:p-10 flex flex-col">
             
             {/* 1. 分類與 Hashtags */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -197,21 +227,24 @@ export default function ClubDetailPage() {
             </div>
 
             {/* 2. 標題與簡介 */}
-            <h1 className="text-4xl font-black text-gray-900 mb-6">{club.name}</h1>
-            <p className="text-lg text-gray-600 leading-relaxed mb-8 flex-1 whitespace-pre-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-6">{club.name}</h1>
+            <p className="text-lg text-gray-600 leading-relaxed mb-8 whitespace-pre-wrap">
               {club.description || "歡迎加入我們！"}
             </p>
 
-            {/* 3. 粉專連結 (如果有的話) */}
+            {/* 3. 🔥 修正：粉專連結改為 Instagram 風格 */}
             {club.clubLink && (
               <a 
                 href={club.clubLink} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex justify-center items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-3 px-6 rounded-xl transition-colors mb-8 w-fit border border-blue-200"
+                className="inline-flex justify-center items-center gap-2 bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 text-pink-700 hover:from-purple-100 hover:to-orange-100 font-bold py-3 px-6 rounded-xl transition-all mb-8 w-fit border border-pink-200/60 shadow-sm"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                前往社團粉專
+                {/* Instagram SVG Icon */}
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                前往社團 Instagram
               </a>
             )}
 
@@ -227,8 +260,8 @@ export default function ClubDetailPage() {
               </div>
             </div>
 
-            {/* 5. 報名與退選操作區塊 (保留你原本的邏輯) */}
-            <div className="border-t border-gray-100 pt-8 mt-auto">
+            {/* 5. 報名與退選操作區塊 */}
+            <div className="border-t border-gray-100 pt-8 mt-4">
               {isMyClub ? (
                 <button 
                   onClick={handleCancelRegister} 
@@ -256,7 +289,7 @@ export default function ClubDetailPage() {
         </div>
       </main>
 
-      {/* 登入彈跳視窗 (保留你原本的邏輯) */}
+      {/* 登入彈跳視窗 */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
