@@ -40,7 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-lib/firebaseConfig.js
-app/admin/actions.ts
 firebase-debug.log
 firestore-debug.log
