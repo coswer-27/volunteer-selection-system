@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebaseConfig';
 import { registerClubTransaction, cancelRegistrationTransaction } from '../../../lib/clubService';
 import { verifyStudentLogin } from '../../../app/actions/auth';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StudentProfile { studentId: string; name: string; className: string; }
 
@@ -22,32 +23,25 @@ export default function ClubDetailPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginForm, setLoginForm] = useState({ studentId: '', name: '', className: '' });
   const [myRegisteredClubId, setMyRegisteredClubId] = useState<string | null>(null);
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [gallery, setGallery] = useState<string[]>([]);
 
-  // 自動探測額外照片的函數
+
   const detectAdditionalImages = async (filename: string) => {
     const dotIndex = filename.lastIndexOf('.');
     if (dotIndex === -1) return;
 
     const baseName = filename.substring(0, dotIndex);
-    const ext = filename.substring(dotIndex);
-    
+    const ext = filename.substring(dotIndex); 
     const validImages = [`/clubs/${filename}`];
     
     for (let i = 1; i <= 5; i++) {
       const testUrl = `/clubs/${baseName}_${i}${ext}`;
       try {
         const res = await fetch(testUrl, { method: 'HEAD' });
-        if (res.ok) {
-          validImages.push(testUrl);
-        } else {
-          break;
-        }
-      } catch (error) {
-        break;
-      }
+        if (res.ok) validImages.push(testUrl);
+        else break;
+      } catch (error) { break; }
     }
     setGallery(validImages);
   };
@@ -67,7 +61,7 @@ export default function ClubDetailPage() {
           setGallery(['/clubs/default.jpg']);
         }
       } else {
-        setSysMessage("❌ 找不到該社團資料");
+        setSysMessage("找不到該社團資料");
       }
     } catch (error) { 
       console.error(error); 
@@ -101,17 +95,14 @@ export default function ClubDetailPage() {
     const formattedClass = loginForm.className.trim();
 
     try {
-      // 🔥 1. 呼叫 Server Action 進行後端 CSV 嚴格驗證
       const verifyResult = await verifyStudentLogin(formattedId, formattedName, formattedClass);
 
       if (!verifyResult.success) {
-        // 驗證失敗：擋下登入，顯示錯誤訊息，且絕對不寫入 Firebase
         setSysMessage(`登入失敗：${verifyResult.message}`);
         setIsSubmitting(false);
         return; 
       }
 
-      // 🔥 2. 驗證成功：放行，並寫入 Firebase 記錄
       const profile = { studentId: formattedId, name: formattedName, className: formattedClass };
       
       await setDoc(doc(db, 'students', formattedId), profile, { merge: true });
@@ -139,6 +130,13 @@ export default function ClubDetailPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("studentProfile");
+    setStudentProfile(null);
+    setMyRegisteredClubId(null);
+    setSysMessage("已成功登出。");
+  };
+
   const handleCancelRegister = async () => {
     if (!studentProfile || !window.confirm(`確定要退選「${club.name}」嗎？`)) return;
     setIsSubmitting(true);
@@ -157,26 +155,49 @@ export default function ClubDetailPage() {
 
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % gallery.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+// 🔥 處理拖拽結束的手勢判定邏輯
+  const handleDragEnd = (_: any, info: any) => {
+    const swipeThreshold = 50; // 拖動超過 50px 就觸發翻頁
+    if (info.offset.x < -swipeThreshold) {
+      nextImage(); // 向左滑，看下一張
+    } else if (info.offset.x > swipeThreshold) {
+      prevImage(); // 向右滑，看上一張
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      {/* 頂部導覽列 */}
-      <nav className="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-40">
-        <button onClick={() => router.push('/')} className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
-          &larr; 返回首頁
-        </button>
-        {studentProfile ? (
-          <div className="text-sm font-bold text-gray-700 bg-gray-100 px-4 py-2 rounded-full">
-            {studentProfile.className} {studentProfile.name}
-          </div>
-        ) : (
-          <button onClick={() => setShowLoginModal(true)} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full transition-colors shadow-sm">
-            學生登入
-          </button>
-        )}
+      <nav className="bg-white shadow-sm sticky top-0 z-40">
+        {/* Navbar */}
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-black tracking-tight text-[#ff3d00]">
+            新生營 社團志願系統
+          </h1>
+
+          {studentProfile ? (
+            <div className="flex items-center gap-4">
+              <div className="hidden text-right text-sm text-black md:block">
+                <p className="font-bold">{studentProfile.name}</p>
+                <p>{studentProfile.className} - {studentProfile.studentId}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+              >
+                登出
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="rounded-full bg-indigo-600 px-6 py-2 font-medium text-white shadow-md transition-transform hover:scale-105 hover:bg-indigo-700"
+            >
+              新生登入
+            </button>
+          )}
+        </div>
       </nav>
 
-      {/* 系統訊息提示 */}
       {sysMessage && (
         <div className="max-w-3xl mx-auto mt-6 px-4">
           <div className={`p-4 rounded-xl font-bold shadow-sm ${sysMessage.includes('成功') ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
@@ -186,27 +207,36 @@ export default function ClubDetailPage() {
         </div>
       )}
 
-      {/* 主要內容區 (調整為 max-w-3xl 讓直式卡片看起來比例更集中好看) */}
       <main className="max-w-3xl mx-auto px-4 mt-6">
-        {/* 🚀 移除 flex-row，保持預設的 flex-col（直式排版） */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col">
-          
-          {/* ============================== */}
-          {/* 上方：照片輪播區 (高度固定，照片不拉長變形) */}
-          {/* ============================== */}
-          {/* 💡 核心優化：設定 h-[400px] 固定高度，確保直的照片不會把圖片框撐高 */}
           <div className="w-full relative bg-gray-900 group h-[260px] sm:h-[400px]">
-            <img 
-              src={gallery[currentImageIndex]} 
-              alt={club.name} 
-              className="w-full h-full object-cover transition-opacity duration-500"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (!target.src.endsWith('/default.jpg')) target.src = '/clubs/default.jpg';
-              }}
-            />
-            
-            {/* 你已登記的徽章提示 */}
+            <AnimatePresence initial={false} mode="wait">
+              <motion.img
+                key={currentImageIndex}
+                src={gallery[currentImageIndex]}
+                alt={club.name}
+                drag={gallery.length > 1 ? "x" : false} // 只有多張圖時才允許橫向拖動
+                dragConstraints={{ left: 0, right: 0 }} // 限制拖動範圍，放手時會彈回
+                dragElastic={0.7}                      // 邊界彈性滑順度
+                onDragEnd={handleDragEnd}               // 綁定結束手勢判定
+                initial={{ opacity: 0.3 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0.3 }}
+                transition={{ duration: 0.2 }}
+                className="w-full h-full object-cover cursor-grab active:cursor-grabbing"
+                style={{ x: 0 }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.endsWith('/default.jpg')) target.src = '/clubs/default.jpg';
+                }}
+              />
+              {club.category && (
+                <span className="absolute top-3 left-3 px-2.5 py-1 bg-rose-600 text-white text-xs font-black rounded-lg shadow-md">
+                  ★ {club.category}
+                </span>
+              )}
+            </AnimatePresence>
+    
             {isMyClub && (
               <div className="absolute top-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-full shadow-lg z-20 font-bold animate-pulse">
                 ✔️ 你已登記此社團
@@ -238,11 +268,6 @@ export default function ClubDetailPage() {
             
             {/* 1. 分類與 Hashtags */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {club.category && (
-                <span className="px-3 py-1 bg-rose-100 text-rose-700 text-sm font-black rounded-lg">
-                  ★ {club.category}
-                </span>
-              )}
               {club.hashtags && club.hashtags.split(/[,，、]+/).filter(Boolean).map((tag: string, i: number) => (
                 <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg border border-indigo-100">
                   #{tag.trim()}
@@ -315,24 +340,29 @@ export default function ClubDetailPage() {
 
       {/* 登入彈跳視窗 */}
       {showLoginModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
-            <div className="bg-indigo-600 p-6 text-center text-white">
-              <h3 className="text-2xl font-bold mb-1">學生登入</h3>
-              <p className="text-indigo-200 text-sm">請輸入學號與姓名</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div className="bg-indigo-600 p-6 text-center">
+              <h3 className="text-2xl font-bold text-white">新生登入</h3>
+              <p className="text-indigo-200 text-sm mt-1">請輸入正確資料以進行志願選填</p>
             </div>
             <form onSubmit={handleStudentLogin} className="p-6 space-y-4">
-              <input required value={loginForm.className} onChange={e => setLoginForm({...loginForm, className: e.target.value})} placeholder="班級 (例如: 資工三A)" className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-              <input required value={loginForm.name} onChange={e => setLoginForm({...loginForm, name: e.target.value})} placeholder="真實姓名" className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-              <input required value={loginForm.studentId} onChange={e => setLoginForm({...loginForm, studentId: e.target.value})} placeholder="學號" className="w-full border border-gray-300 rounded-lg p-3 uppercase outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-              
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold rounded-lg p-3 hover:bg-gray-200 transition-colors">
-                  取消
-                </button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 bg-indigo-600 text-white font-bold rounded-lg p-3 shadow-md hover:bg-indigo-700 transition-colors disabled:bg-indigo-400">
-                  {isSubmitting ? '登入中...' : '確認登入'}
-                </button>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">班級 (Class)</label>
+                <input required type="text" value={loginForm.className} onChange={(e) => setLoginForm({ ...loginForm, className: e.target.value })} placeholder="請輸入您的班級" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">姓名 (Name)</label>
+                <input required type="text" value={loginForm.name} onChange={(e) => setLoginForm({ ...loginForm, name: e.target.value })} placeholder="請輸入您註冊的中文姓名" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">學號 (Student ID)</label>
+                <input required type="text" value={loginForm.studentId} onChange={(e) => setLoginForm({ ...loginForm, studentId: e.target.value })} placeholder="請輸入您的九碼學號" className="w-full border-gray-300 border px-4 py-2.5 rounded-xl uppercase focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 px-4 py-2.5 border-2 border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-colors">取消</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-colors">{isSubmitting ? "處理中..." : "登入"}</button>
               </div>
             </form>
           </div>
