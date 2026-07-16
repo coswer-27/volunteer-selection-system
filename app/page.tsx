@@ -438,7 +438,7 @@ export default function Home() {
         {/* 📚 所有社團網格區塊 */}
         <section>
           <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-2xl font-black text-[#00a8e4]codeㄍㄟ">所有社團</h2>
+            <h2 className="text-2xl font-black text-[#00a8e4]">所有社團</h2>
           </div>
 
           {clubs.length === 0 ? (
